@@ -21,8 +21,24 @@ public class Sikuli {
 	// also assume that if the location returned is 0,0 the find failed
 	
 	// finds a picture on the desktop and returns its center coord
-	public static int[] findPicture( String path ) {
+	public static int[] findImg( String path ) {
 		int[] location = {0,0};
+		
+		BufferedImage image = null;
+		try {
+			image = ImageIO.read(new File(path));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		Target target = new ImageTarget(image);
+		ScreenRegion s = new DesktopScreenRegion();
+		ScreenRegion r = s.find(target);
+		
+		if( r != null ) {
+			location[0] = r.getCenter().getX();
+			location[1] = r.getCenter().getY();
+		}
 		
 		return location;
 	}
@@ -41,7 +57,9 @@ public class Sikuli {
 		
 		Target target = new ImageTarget(image);
 		
-		ScreenRegion s = new DesktopScreenRegion();
+		//ScreenRegion s = new DekstopScreenRegion();
+		// smaller ScreenRegion means faster searches.
+		ScreenRegion s = new DesktopScreenRegion(270, 215, 1380, 650);
 		
 		ScreenRegion r = s.find(target);
 		

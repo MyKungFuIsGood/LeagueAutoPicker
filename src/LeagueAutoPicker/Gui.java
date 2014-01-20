@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.ImageIcon;
@@ -22,6 +21,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 public class Gui extends JFrame {
 
@@ -34,9 +35,11 @@ public class Gui extends JFrame {
 	private JLabel lblError;
 	
 	private String path; // path to riot assests
+	private String imgPath; // dir for asset paths
 	private String selectedHero; // used to store the complete path to the currently selected hero 
 	private boolean searching = false; // makes sure multiple searches are not executed
 	private heroFind heroSearch = new heroFind(); // swingworker class
+	private heroLobbyFind heroLobbySearch = new heroLobbyFind(); //swingworker class
 
 	/**
 	 * Launch the application.
@@ -108,6 +111,12 @@ public class Gui extends JFrame {
 		contentPane.add(lblHero);
 		
 		txtLobbyMsg = new JTextField();
+		txtLobbyMsg.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				txtLobbyMsg.selectAll();
+			}
+		});
 		txtLobbyMsg.setText("Message (optional)");
 		txtLobbyMsg.setBounds(16, 186, 134, 28);
 		contentPane.add(txtLobbyMsg);
@@ -117,22 +126,23 @@ public class Gui extends JFrame {
 		btnStart.setHorizontalAlignment(SwingConstants.LEADING);
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				// if a search is already running, don't run again
 				if( !searching ) {
 					searching = true;
 					
-					// use search to get hero, only if checked!
-					// find hero
-					heroSearch.execute();
-					
-					// move mouse, only if checked!
-					// find send button
-					// click on middle left of button
-					// enter msg
-					// send enter command
-					
-					// display 'Success' on btnStart for 5 seconds
-					btnStart.setText("Start");
+					// if txtLobby msg is not edited just search for hero
+					// if it is edited, search for hero and send lobby msg
+					String msg = txtLobbyMsg.getText();
+					if( msg.equals("Message (optional)") || msg.equals("") ) {
+						heroSearch.execute();
+					}
+					else {
+						imgPath = System.getProperty("user.dir") + File.separator + "img" + File.separator + "teamChat.png";
+						heroLobbySearch.execute();
+					}
 				}
+
+				searching = false;
 			}
 		});
 		btnStart.setBounds(25, 227, 117, 29);
@@ -144,8 +154,11 @@ public class Gui extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// stop the swing worker that was started on btnStart action
 				heroSearch.setStopFlag();
+				heroLobbySearch.setStopFlag();
 				
 				heroSearch = new heroFind();
+				heroLobbySearch = new heroLobbyFind();
+				
 				searching = false;
 				
 				// display 'Stopped' on btnStart for 5 seconds
@@ -155,6 +168,121 @@ public class Gui extends JFrame {
 		btnStop.setBounds(25, 269, 117, 29);
 		contentPane.add(btnStop);
 	} //Gui()
+	
+	class heroLobbyFind extends SwingWorker<int[], int[]> {
+		private boolean stopFlag = false;
+		
+		void setStopFlag() { stopFlag = true; }
+		
+		@Override
+		protected int[] doInBackground() throws Exception {
+			int[] location = new int[2];
+			int i = 0;
+			
+			// will run max of 1 min before stopping
+			while(location[0] == 0 && i < 600) {
+				location = Sikuli.findHero(selectedHero); //find x,y of hero
+				if(location[0] == 0) { location[1] = i; }
+				publish(location);
+				
+				Thread.sleep(100);
+				i++;
+				
+				if( stopFlag ) { return null; }
+			}
+			//publish(location); // send hero location to process
+			
+			location[0] = 0; // set to zero to begin lobby search
+			i = 0; // reset i timer
+			while(location[0] == 0 && i < 600) {
+				location = Sikuli.findImg(imgPath); //find x,y of lobby text box
+				if(location[0] == 0) { location[1] = i; }
+				publish(location);
+				
+				Thread.sleep(100);
+				i++;
+				
+				if( stopFlag ) { return null; }
+			}
+			return location;
+		}
+		
+		@Override
+		protected void process(List<int[]> chunks) {
+			int[] location = chunks.get(chunks.size() - 1);
+			int x = location[0];
+			int y = location[1];
+			
+			if( x == 0 ) {
+				int mostRecent = y;
+				
+				String btnText = "";
+				
+				if( mostRecent % 4 == 0 ) { btnText = "Seaching"; }
+				else if( mostRecent % 4 == 1 ) { btnText = "Seaching."; }
+				else if( mostRecent % 4 == 2 ) { btnText = "Seaching.."; }
+				else { btnText = "Seaching..."; }
+				
+				btnStart.setText(btnText);
+			}
+			else {
+				Robot bot = null;
+				try {
+					bot = new Robot();
+				} catch (AWTException e1) {
+					e1.printStackTrace();
+				}
+				int mask = InputEvent.BUTTON1_MASK;
+				
+				bot.mouseMove(x, y);
+				bot.mousePress(mask);
+				bot.mouseRelease(mask);
+				
+				btnStart.setText("Start");
+			}
+		}
+		
+		@Override
+		protected void done() {
+			int[] location = new int[2];
+			
+			try {
+				location = get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			int x = location[0];
+			int y = location[1] + 160; //lobby text box is 160 pixels below teamChat.png
+			
+			if( x == 0 ) {
+				btnStart.setText("Start");
+				return;
+			}
+			
+			Robot bot = null;
+			try {
+				bot = new Robot();
+			} catch (AWTException e1) {
+				e1.printStackTrace();
+			}
+			int mask = InputEvent.BUTTON1_MASK;
+			
+			bot.mouseMove(x, y);
+			bot.mousePress(mask);
+			bot.mouseRelease(mask);
+			
+			String msg = txtLobbyMsg.getText();
+			GuiSupport.writeMsg(bot, msg);
+			
+			btnStart.setText("Start");
+
+		}
+	}
 	
 	class heroFind extends SwingWorker<int[], Integer> {
 		private boolean stopFlag = false;
@@ -172,7 +300,7 @@ public class Gui extends JFrame {
 				Thread.sleep(100);
 				i++;
 				
-				if( stopFlag ) { break; }
+				if( stopFlag ) { return location; } // will return location {0,0} and done will do nothing 
 			}
 			
 			return location;
@@ -224,7 +352,10 @@ public class Gui extends JFrame {
 			
 			bot.mouseMove(x, y);
 			bot.mousePress(mask);
-			bot.mouseRelease(mask);	
+			bot.mouseRelease(mask);
+			
+			btnStart.setText("Start");
+
 		} // done()
 	} // class heroFind
 }

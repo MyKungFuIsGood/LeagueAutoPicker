@@ -1,10 +1,10 @@
 package LeagueAutoPicker;
 
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.SwingWorker;
 
 public class GuiSupport {
 	// takes a directory path and returns an array of strings of hero names
@@ -41,5 +41,32 @@ public class GuiSupport {
 		}
 		
 		return heroFileNames;
+	}
+	
+	public static void writeMsg(Robot bot, String msg) {
+		char[] arr = msg.toCharArray();
+		int length = arr.length;
+		int i = 0;
+		while( i < length ) {
+			int kcode = (int) arr[i] - 32;
+			
+			if(kcode == 0) {
+				kcode = KeyEvent.VK_SPACE;
+			}
+			bot.keyPress(kcode);
+			bot.keyRelease(kcode);
+			i++;
+		}
+		bot.keyPress(KeyEvent.VK_ENTER);
+		bot.keyRelease(KeyEvent.VK_ENTER);
+		
+		// possible other method
+		/*
+		 for(int i = 0; i < string.length(); i++){
+		    char c = Character.toUpperCase(s.charAt(i));
+		    KeyEvent ke = new KeyEvent(source, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, (int)c, c);
+		    //do whatever with key event
+		}
+		*/
 	}
 }
