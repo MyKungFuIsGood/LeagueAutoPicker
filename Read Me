@@ -1,0 +1,9 @@
+To run this you will need:
+	- JRE 1.6
+	- Sikuli Standalone API version 1.0.2 or newer: https://code.google.com/p/sikuli-api/
+	- SLF4J jars sl4j-simple-1.7.5.jar, sl4fj-api-1.7.5.jar
+		- it is my understanding that these should be included in the sikuli java api but for whatever reason I needed to add them as a separate library
+	
+Some things to know...
+	txtLobbyMsg only supports space and A-Z a-z and 0-9, it DOES NOT SUPPORT PUNCTUATION
+	you will need to hit reset after every successful hero find.
