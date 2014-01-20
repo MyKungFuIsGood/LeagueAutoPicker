@@ -31,7 +31,7 @@ public class Gui extends JFrame {
 	private JLabel lblHero;
 	private JTextField txtLobbyMsg;
 	private JButton btnStart;
-	private JButton btnStop;
+	private JButton btnReset;
 	private JLabel lblError;
 	
 	private String path; // path to riot assests
@@ -148,9 +148,9 @@ public class Gui extends JFrame {
 		btnStart.setBounds(25, 227, 117, 29);
 		contentPane.add(btnStart);
 		
-		btnStop = new JButton("Stop");
-		btnStop.setHorizontalAlignment(SwingConstants.LEADING);
-		btnStop.addActionListener(new ActionListener() {
+		btnReset = new JButton("Reset");
+		btnReset.setHorizontalAlignment(SwingConstants.LEADING);
+		btnReset.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// stop the swing worker that was started on btnStart action
 				heroSearch.setStopFlag();
@@ -165,8 +165,8 @@ public class Gui extends JFrame {
 				btnStart.setText("Start");
 			}
 		});
-		btnStop.setBounds(25, 269, 117, 29);
-		contentPane.add(btnStop);
+		btnReset.setBounds(25, 269, 117, 29);
+		contentPane.add(btnReset);
 	} //Gui()
 	
 	class heroLobbyFind extends SwingWorker<int[], int[]> {
