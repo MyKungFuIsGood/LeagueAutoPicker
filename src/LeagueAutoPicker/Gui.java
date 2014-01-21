@@ -21,6 +21,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
+
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
@@ -34,12 +35,15 @@ public class Gui extends JFrame {
 	private JButton btnReset;
 	private JLabel lblError;
 	
-	private String path; // path to riot assests
-	private String imgPath; // dir for asset paths
+	// dir for asset paths
+	private String summonerSpell = System.getProperty("user.dir") + File.separator + "img" + File.separator + "igniteCrop.png";
+	private String path; // path to riot assests 
 	private String selectedHero; // used to store the complete path to the currently selected hero 
 	private boolean searching = false; // makes sure multiple searches are not executed
 	private heroFind heroSearch = new heroFind(); // swingworker class
 	private heroLobbyFind heroLobbySearch = new heroLobbyFind(); //swingworker class
+	
+	private int offset = 245; // y distance from summonerSpell to lobby text box
 
 	/**
 	 * Launch the application.
@@ -137,11 +141,10 @@ public class Gui extends JFrame {
 						heroSearch.execute();
 					}
 					else {
-						imgPath = System.getProperty("user.dir") + File.separator + "img" + File.separator + "teamChat.png";
 						heroLobbySearch.execute();
 					}
 				}
-
+				
 				searching = false;
 			}
 		});
@@ -156,9 +159,11 @@ public class Gui extends JFrame {
 				heroSearch.setStopFlag();
 				heroLobbySearch.setStopFlag();
 				
+				// reset the objects
 				heroSearch = new heroFind();
 				heroLobbySearch = new heroLobbyFind();
 				
+				// set search flag to false
 				searching = false;
 				
 				// display 'Stopped' on btnStart for 5 seconds
@@ -181,7 +186,8 @@ public class Gui extends JFrame {
 			
 			// will run max of 1 min before stopping
 			while(location[0] == 0 && i < 600) {
-				location = Sikuli.findHero(selectedHero); //find x,y of hero
+				location = Sikuli.findImg(summonerSpell);
+						//findHero(selectedHero); //find x,y of hero
 				if(location[0] == 0) { location[1] = i; }
 				publish(location);
 				
@@ -195,7 +201,8 @@ public class Gui extends JFrame {
 			location[0] = 0; // set to zero to begin lobby search
 			i = 0; // reset i timer
 			while(location[0] == 0 && i < 600) {
-				location = Sikuli.findImg(imgPath); //find x,y of lobby text box
+				location = Sikuli.findHero(selectedHero);
+						//findImg(summonerSpell); //find x,y of lobby text box
 				if(location[0] == 0) { location[1] = i; }
 				publish(location);
 				
@@ -211,7 +218,7 @@ public class Gui extends JFrame {
 		protected void process(List<int[]> chunks) {
 			int[] location = chunks.get(chunks.size() - 1);
 			int x = location[0];
-			int y = location[1];
+			int y = location[1] + offset;
 			
 			if( x == 0 ) {
 				int mostRecent = y;
@@ -237,6 +244,9 @@ public class Gui extends JFrame {
 				bot.mouseMove(x, y);
 				bot.mousePress(mask);
 				bot.mouseRelease(mask);
+
+				String msg = txtLobbyMsg.getText();
+				GuiSupport.writeMsg(bot, msg);
 				
 				btnStart.setText("Start");
 			}
@@ -257,7 +267,7 @@ public class Gui extends JFrame {
 			}
 			
 			int x = location[0];
-			int y = location[1] + 160; //lobby text box is 160 pixels below teamChat.png
+			int y = location[1]; // + offset;
 			
 			if( x == 0 ) {
 				btnStart.setText("Start");
@@ -276,8 +286,8 @@ public class Gui extends JFrame {
 			bot.mousePress(mask);
 			bot.mouseRelease(mask);
 			
-			String msg = txtLobbyMsg.getText();
-			GuiSupport.writeMsg(bot, msg);
+			//String msg = txtLobbyMsg.getText();
+			//GuiSupport.writeMsg(bot, msg);
 			
 			btnStart.setText("Start");
 
