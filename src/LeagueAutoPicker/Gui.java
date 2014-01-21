@@ -194,7 +194,7 @@ public class Gui extends JFrame {
 				Thread.sleep(100);
 				i++;
 				
-				if( stopFlag ) { return null; }
+				if( stopFlag ) { return location; }
 			}
 			//publish(location); // send hero location to process
 			
@@ -209,7 +209,7 @@ public class Gui extends JFrame {
 				Thread.sleep(100);
 				i++;
 				
-				if( stopFlag ) { return null; }
+				if( stopFlag ) { return location; }
 			}
 			return location;
 		}
