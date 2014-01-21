@@ -290,7 +290,7 @@ public class Gui extends JFrame {
 			//GuiSupport.writeMsg(bot, msg);
 			
 			btnStart.setText("Start");
-
+			heroLobbySearch = new heroLobbyFind();
 		}
 	}
 	
@@ -365,7 +365,7 @@ public class Gui extends JFrame {
 			bot.mouseRelease(mask);
 			
 			btnStart.setText("Start");
-
+			heroSearch = new heroFind();
 		} // done()
 	} // class heroFind
 }
