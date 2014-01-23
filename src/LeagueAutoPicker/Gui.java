@@ -103,12 +103,12 @@ public class Gui extends JFrame {
 		}
 		
 		// get summoner spell path
-		spellPath = System.getProperty("user.dir") + File.separator + "img" + File.separator;
+		spellPath = GuiSupport.getSpellsPath();
 		
 		comboSpell = new JComboBox(GuiSupport.getSummonerSpells(spellPath));
 		comboSpell.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				selectedSpell = spellPath + (String)comboSpell.getSelectedItem() + "_.png";
+				selectedSpell = spellPath + (String)comboSpell.getSelectedItem() + GuiSupport.spellPostfix;
 			}
 		});
 		comboSpell.setBounds(10, 53, 130, 27);
