@@ -29,6 +29,7 @@ public class Gui extends JFrame {
 
 	private JPanel contentPane;
 	private JComboBox comboHero;
+	private JComboBox comboSpell;
 	private JLabel lblHero;
 	private JTextField txtLobbyMsg;
 	private JButton btnStart;
@@ -36,19 +37,18 @@ public class Gui extends JFrame {
 	private JLabel lblError;
 	
 	// dir for asset paths
-	private String summonerSpell = System.getProperty("user.dir") + File.separator + "img" + File.separator + "igniteCrop.png";
-	private String path; // path to riot assests 
+	private String spellPath; // path to summoner spell assets
+	private String path; // path to riot assets 
+	private String selectedSpell; // used to store complete path for spell currently selected
 	private String selectedHero; // used to store the complete path to the currently selected hero 
 	private boolean searching = false; // makes sure multiple searches are not executed
-	private heroFind heroSearch = new heroFind(); // swingworker class
-	private heroLobbyFind heroLobbySearch = new heroLobbyFind(); //swingworker class
-	private Search search = new Search();
+	private Search search = new Search(); // SwingWorker class that find summoner spell
 	
 	private int offset = 245; // y distance from summonerSpell to lobby text box
-	private int xSearchOffset = 0; // x distance from summoner spell to search text box
-	private int ySearchOffset = 0; // y distance from summoner spell to search text box
-	private int xHeroOffset = 0; // x distance from summoner spell to hero
-	private int yHeroOffset = 0; // y distance from summoner spell to hero
+	private int xSearchOffset = 220; // x distance from summoner spell to search text box
+	private int ySearchOffset = -355; // y distance from summoner spell to search text box
+	private int xHeroOffset = -345; // x distance from summoner spell to hero
+	private int yHeroOffset = -285; // y distance from summoner spell to hero
 
 	/**
 	 * Launch the application.
@@ -71,7 +71,7 @@ public class Gui extends JFrame {
 	 */
 	public Gui() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 169, 338);
+		setBounds(100, 100, 169, 395);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -102,6 +102,18 @@ public class Gui extends JFrame {
 			}
 		}
 		
+		// get summoner spell path
+		spellPath = System.getProperty("user.dir") + File.separator + "img" + File.separator;
+		
+		comboSpell = new JComboBox(GuiSupport.getSummonerSpells(spellPath));
+		comboSpell.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				selectedSpell = spellPath + (String)comboSpell.getSelectedItem() + "_.png";
+			}
+		});
+		comboSpell.setBounds(10, 53, 130, 27);
+		contentPane.add(comboSpell);
+		
 		comboHero = new JComboBox(GuiSupport.getHeroNames(path));
 		comboHero.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -109,14 +121,14 @@ public class Gui extends JFrame {
 				lblHero.setIcon(new ImageIcon( selectedHero ));  //path + heroName + postFix = success!
 			}
 		});
-		comboHero.setBounds(18, 13, 130, 27);
+		comboHero.setBounds(10, 13, 130, 27);
 		contentPane.add(comboHero);
 		
 		lblHero = new JLabel("");
 		// load first champion avatar, will be the first one listed in the comboHero
 		selectedHero =path + GuiSupport.getHeroFileNames(path).toArray()[0];
 		lblHero.setIcon(new ImageIcon(selectedHero));
-		lblHero.setBounds(23, 53, 120, 120);
+		lblHero.setBounds(15, 93, 120, 120);
 		contentPane.add(lblHero);
 		
 		txtLobbyMsg = new JTextField();
@@ -127,7 +139,7 @@ public class Gui extends JFrame {
 			}
 		});
 		txtLobbyMsg.setText("Message (optional)");
-		txtLobbyMsg.setBounds(16, 186, 134, 28);
+		txtLobbyMsg.setBounds(8, 226, 134, 28);
 		contentPane.add(txtLobbyMsg);
 		txtLobbyMsg.setColumns(10);
 		
@@ -139,21 +151,18 @@ public class Gui extends JFrame {
 				if( !searching ) {
 					searching = true;
 					
-					// if txtLobby msg is not edited just search for hero
-					// if it is edited, search for hero and send lobby msg
+					// if txtlobbyMsg is edited set flag to true
 					String msg = txtLobbyMsg.getText();
-					if( msg.equals("Message (optional)") || msg.equals("") ) {
-						heroSearch.execute();
-					}
-					else {
-						heroLobbySearch.execute();
-					}
+					boolean set = !(msg.equals("Message (optional)") || msg.equals(""));
+					search.setLobbyMsg(set);
+					
+					search.execute();
 				}
 				
 				searching = false;
 			}
 		});
-		btnStart.setBounds(25, 227, 117, 29);
+		btnStart.setBounds(17, 267, 117, 29);
 		contentPane.add(btnStart);
 		
 		btnReset = new JButton("Reset");
@@ -161,12 +170,10 @@ public class Gui extends JFrame {
 		btnReset.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// stop the swing worker that was started on btnStart action
-				heroSearch.setStopFlag();
-				heroLobbySearch.setStopFlag();
+				search.setStopFlag();
 				
 				// reset the objects
-				heroSearch = new heroFind();
-				heroLobbySearch = new heroLobbyFind();
+				search = new Search();
 				
 				// set search flag to false
 				searching = false;
@@ -175,8 +182,10 @@ public class Gui extends JFrame {
 				btnStart.setText("Start");
 			}
 		});
-		btnReset.setBounds(25, 269, 117, 29);
+		btnReset.setBounds(17, 309, 117, 29);
 		contentPane.add(btnReset);
+		
+		
 	} //Gui()
 	
 	class Search extends SwingWorker<Void, int[]> {
@@ -192,7 +201,7 @@ public class Gui extends JFrame {
 			int i = 0;
 			
 			while(location[0] == 0 && i < 600) {
-				location = Sikuli.findImg(summonerSpell);
+				location = Sikuli.findImg(selectedSpell);
 				if(location[0] == 0) { location[1] = i; }
 				else { break; }
 				publish(location);
@@ -212,14 +221,16 @@ public class Gui extends JFrame {
 			}
 			int mask = InputEvent.BUTTON1_MASK;
 			
-			// move to lobby text box
-			bot.mouseMove(x, y + offset);
-			bot.mousePress(mask);
-			bot.mouseRelease(mask);
-
-			// enter lobby msg
-			String msg = txtLobbyMsg.getText();
-			GuiSupport.writeMsg(bot, msg);
+			if(lobbyMsg) {
+				// move to lobby text box
+				bot.mouseMove(x, y + offset);
+				bot.mousePress(mask);
+				bot.mouseRelease(mask);
+	
+				// enter lobby msg
+				String msg = txtLobbyMsg.getText();
+				GuiSupport.writeMsg(bot, msg, true);
+			}
 			
 			// move to search box
 			bot.mouseMove(x + xSearchOffset, y + ySearchOffset);
@@ -228,8 +239,11 @@ public class Gui extends JFrame {
 			bot.mouseRelease(mask);
 			
 			// enter hero name
+			Thread.sleep(50); // need to wait a bit
 			String hero = (String) comboHero.getSelectedItem();
-			GuiSupport.writeMsg(bot, hero);
+			GuiSupport.writeMsg(bot, hero, false);
+			
+			Thread.sleep(400);
 			
 			// move to hero and click
 			bot.mouseMove(x + xHeroOffset, y + yHeroOffset);
@@ -264,200 +278,5 @@ public class Gui extends JFrame {
 			
 			search = new Search();
 		}
-	}
-	
-	class heroLobbyFind extends SwingWorker<int[], int[]> {
-		private boolean stopFlag = false;
-		
-		void setStopFlag() { stopFlag = true; }
-		
-		@Override
-		protected int[] doInBackground() throws Exception {
-			int[] location = new int[2];
-			int i = 0;
-			
-			// will run max of 1 min before stopping
-			while(location[0] == 0 && i < 600) {
-				location = Sikuli.findImg(summonerSpell);
-						//findHero(selectedHero); //find x,y of hero
-				if(location[0] == 0) { location[1] = i; }
-				publish(location);
-				
-				Thread.sleep(100);
-				i++;
-				
-				if( stopFlag ) { return location; }
-			}
-			//publish(location); // send hero location to process
-			
-			location[0] = 0; // set to zero to begin lobby search
-			i = 0; // reset i timer
-			while(location[0] == 0 && i < 600) {
-				location = Sikuli.findHero(selectedHero);
-						//findImg(summonerSpell); //find x,y of lobby text box
-				if(location[0] == 0) { location[1] = i; }
-				publish(location);
-				
-				Thread.sleep(100);
-				i++;
-				
-				if( stopFlag ) { return location; }
-			}
-			return location;
-		}
-		
-		@Override
-		protected void process(List<int[]> chunks) {
-			int[] location = chunks.get(chunks.size() - 1);
-			int x = location[0];
-			int y = location[1] + offset;
-			
-			if( x == 0 ) {
-				int mostRecent = y;
-				
-				String btnText = "";
-				
-				if( mostRecent % 4 == 0 ) { btnText = "Seaching"; }
-				else if( mostRecent % 4 == 1 ) { btnText = "Seaching."; }
-				else if( mostRecent % 4 == 2 ) { btnText = "Seaching.."; }
-				else { btnText = "Seaching..."; }
-				
-				btnStart.setText(btnText);
-			}
-			else {
-				Robot bot = null;
-				try {
-					bot = new Robot();
-				} catch (AWTException e1) {
-					e1.printStackTrace();
-				}
-				int mask = InputEvent.BUTTON1_MASK;
-				
-				bot.mouseMove(x, y);
-				bot.mousePress(mask);
-				bot.mouseRelease(mask);
-
-				String msg = txtLobbyMsg.getText();
-				GuiSupport.writeMsg(bot, msg);
-				
-				btnStart.setText("Start");
-			}
-		}
-		
-		@Override
-		protected void done() {
-			int[] location = new int[2];
-			
-			try {
-				location = get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			int x = location[0];
-			int y = location[1]; // + offset;
-			
-			if( x == 0 ) {
-				btnStart.setText("Start");
-				return;
-			}
-			
-			Robot bot = null;
-			try {
-				bot = new Robot();
-			} catch (AWTException e1) {
-				e1.printStackTrace();
-			}
-			int mask = InputEvent.BUTTON1_MASK;
-			
-			bot.mouseMove(x, y);
-			bot.mousePress(mask);
-			bot.mouseRelease(mask);
-			
-			//String msg = txtLobbyMsg.getText();
-			//GuiSupport.writeMsg(bot, msg);
-			
-			btnStart.setText("Start");
-			heroLobbySearch = new heroLobbyFind();
-		}
-	}
-	
-	class heroFind extends SwingWorker<int[], Integer> {
-		private boolean stopFlag = false;
-		
-		void setStopFlag() { stopFlag = true; }
-		
-		@Override
-		protected int[] doInBackground() throws Exception {
-			int[] location = new int[2];
-			int i = 0;
-			
-			while(location[0] == 0 && i < 600) {
-				location = Sikuli.findHero(selectedHero);
-				publish(i);
-				Thread.sleep(100);
-				i++;
-				
-				if( stopFlag ) { return location; } // will return location {0,0} and done will do nothing 
-			}
-			
-			return location;
-		} // doInBackground()
-		
-		@Override
-		protected void process(List<Integer> chunks) {
-			int mostRecent = chunks.get(chunks.size() - 1);
-			
-			String btnText = "";
-			
-			if( mostRecent % 4 == 0 ) { btnText = "Seaching"; }
-			else if( mostRecent % 4 == 1 ) { btnText = "Seaching."; }
-			else if( mostRecent % 4 == 2 ) { btnText = "Seaching.."; }
-			else { btnText = "Seaching..."; }
-			
-			btnStart.setText(btnText);
-		} // process()
-		
-		@Override
-		protected void done() {
-			int[] location = new int[2];
-			
-			try {
-				location = get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			int x = location[0];
-			int y = location[1];
-			
-			if( x == 0 ) {
-				btnStart.setText("Start");
-				return;
-			}
-			
-			Robot bot = null;
-			try {
-				bot = new Robot();
-			} catch (AWTException e1) {
-				e1.printStackTrace();
-			}
-			int mask = InputEvent.BUTTON1_MASK;
-			
-			bot.mouseMove(x, y);
-			bot.mousePress(mask);
-			bot.mouseRelease(mask);
-			
-			btnStart.setText("Start");
-			heroSearch = new heroFind();
-		} // done()
-	} // class heroFind
-}
+	} // Search() SwingWorker
+} 

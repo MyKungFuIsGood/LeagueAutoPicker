@@ -7,6 +7,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GuiSupport {
+	// takes a directory path and returns an array of strings of available summoner spells
+	public static String[] getSummonerSpells( String path ) {
+		File dir = new File(path);
+		File[] listOfFiles = dir.listFiles();
+		
+		String[] spells = new String[listOfFiles.length];
+		for(int i = 0; i < listOfFiles.length; i++) {
+			spells[i] = listOfFiles[i].getName().split("_")[0];
+		}
+		
+		return spells;
+	}
+	
 	// takes a directory path and returns an array of strings of hero names
 	public static String[] getHeroNames( String path ) {
 		File dir = new File(path);
@@ -43,8 +56,8 @@ public class GuiSupport {
 		return heroFileNames;
 	}
 	
-	public static void writeMsg(Robot bot, String msg) {
-		char[] arr = msg.toCharArray();
+	public static void writeMsg(Robot bot, String msg, boolean...enter) {
+		char[] arr = msg.toLowerCase().toCharArray();
 		int length = arr.length;
 		int i = 0;
 		while( i < length ) {
@@ -57,8 +70,11 @@ public class GuiSupport {
 			bot.keyRelease(kcode);
 			i++;
 		}
-		bot.keyPress(KeyEvent.VK_ENTER);
-		bot.keyRelease(KeyEvent.VK_ENTER);
+		
+		if(enter[0]) {
+			bot.keyPress(KeyEvent.VK_ENTER);
+			bot.keyRelease(KeyEvent.VK_ENTER);
+		}
 		
 		// possible other method
 		/*
