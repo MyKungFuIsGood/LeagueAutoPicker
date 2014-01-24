@@ -7,12 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GuiSupport {
-	public final static String spellPostfix = "_spell.png";
-	
-	public static String getSpellsPath() {
-		return System.getProperty("user.dir") + File.separator + "img" + File.separator;
-	}
-	
 	// takes a directory path and returns an array of strings of available summoner spells
 	public static String[] getSummonerSpells( String path ) {
 		File dir = new File(path);
@@ -21,11 +15,10 @@ public class GuiSupport {
 		List<String> spellFileNames = new ArrayList<String>();
 		
 		for(int i = 0; i < listOfFiles.length; i++) {
-			if( listOfFiles[i].isFile() && (listOfFiles[i].getName().toLowerCase().indexOf("spell") > 0)) {
+			if(listOfFiles[i].isFile() && (listOfFiles[i].getName().toLowerCase().indexOf("spell") > 0)) {
 				spellFileNames.add(listOfFiles[i].getName());
 			}
 		}
-		
 		String[] spells = new String[spellFileNames.size()];
 		for(int i = 0; i < spells.length; i++) {
 			spells[i] = spellFileNames.get(i).split("_")[0];
