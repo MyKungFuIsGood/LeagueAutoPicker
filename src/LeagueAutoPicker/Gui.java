@@ -188,7 +188,7 @@ public class Gui extends JFrame {
 		btnReset.setBounds(26, 320, 117, 29);
 		contentPane.add(btnReset);
 		
-		JLabel lblChooseASummoner = new JLabel("Summoner spell");
+		JLabel lblChooseASummoner = new JLabel("Choose a spell");
 		lblChooseASummoner.setHorizontalAlignment(SwingConstants.CENTER);
 		lblChooseASummoner.setBounds(6, 217, 157, 25);
 		contentPane.add(lblChooseASummoner);
