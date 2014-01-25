@@ -117,6 +117,9 @@ public class Gui extends JFrame {
 		comboSpell.setBounds(19, 244, 130, 27);
 		contentPane.add(comboSpell);
 		
+		// giving selectedSpell a value
+		selectedSpell = spellPath + (String)comboSpell.getSelectedItem() + "_spell.png";
+		
 		comboHero = new JComboBox(GuiSupport.getHeroNames(path));
 		comboHero.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -126,6 +129,9 @@ public class Gui extends JFrame {
 		});
 		comboHero.setBounds(19, 10, 130, 27);
 		contentPane.add(comboHero);
+		
+		// giving selectedHero a value
+		selectedHero = path + (String)comboHero.getSelectedItem() + LeagueVars.heroPostfix;
 		
 		lblHero = new JLabel("");
 		// load first champion avatar, will be the first one listed in the comboHero
@@ -263,8 +269,8 @@ public class Gui extends JFrame {
 			bot.mouseRelease(mask);
 			
 			// enter hero name
-			Thread.sleep(100); // need to wait a bit
-			String hero = (String) comboHero.getSelectedItem();
+			String hero = selectedHero;
+			System.out.println(hero);
 			GuiSupport.writeMsg(bot, hero, false);
 			
 			Thread.sleep(400);
