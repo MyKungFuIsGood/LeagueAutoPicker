@@ -24,6 +24,8 @@ import javax.swing.border.EmptyBorder;
 
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Gui extends JFrame {
 
@@ -34,6 +36,7 @@ public class Gui extends JFrame {
 	private JTextField txtLobbyMsg;
 	private JButton btnStart;
 	private JButton btnReset;
+	private JLabel lblBtnResult;
 	private JLabel lblError;
 	
 	// dir for asset paths
@@ -71,7 +74,7 @@ public class Gui extends JFrame {
 	 */
 	public Gui() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 169, 395);
+		setBounds(100, 100, 169, 408);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -103,15 +106,15 @@ public class Gui extends JFrame {
 		}
 		
 		// get summoner spell path
-		spellPath = GuiSupport.getSpellsPath();
+		spellPath = System.getProperty("user.dir") + File.separator + "img" + File.separator;
 		
 		comboSpell = new JComboBox(GuiSupport.getSummonerSpells(spellPath));
 		comboSpell.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				selectedSpell = spellPath + (String)comboSpell.getSelectedItem() + GuiSupport.spellPostfix;
+				selectedSpell = spellPath + (String)comboSpell.getSelectedItem() + "_spell.png";
 			}
 		});
-		comboSpell.setBounds(10, 53, 130, 27);
+		comboSpell.setBounds(19, 244, 130, 27);
 		contentPane.add(comboSpell);
 		
 		comboHero = new JComboBox(GuiSupport.getHeroNames(path));
@@ -121,14 +124,14 @@ public class Gui extends JFrame {
 				lblHero.setIcon(new ImageIcon( selectedHero ));  //path + heroName + postFix = success!
 			}
 		});
-		comboHero.setBounds(10, 13, 130, 27);
+		comboHero.setBounds(19, 10, 130, 27);
 		contentPane.add(comboHero);
 		
 		lblHero = new JLabel("");
 		// load first champion avatar, will be the first one listed in the comboHero
 		selectedHero =path + GuiSupport.getHeroFileNames(path).toArray()[0];
 		lblHero.setIcon(new ImageIcon(selectedHero));
-		lblHero.setBounds(15, 93, 120, 120);
+		lblHero.setBounds(24, 47, 120, 120);
 		contentPane.add(lblHero);
 		
 		txtLobbyMsg = new JTextField();
@@ -139,7 +142,7 @@ public class Gui extends JFrame {
 			}
 		});
 		txtLobbyMsg.setText("Message (optional)");
-		txtLobbyMsg.setBounds(8, 226, 134, 28);
+		txtLobbyMsg.setBounds(17, 177, 134, 28);
 		contentPane.add(txtLobbyMsg);
 		txtLobbyMsg.setColumns(10);
 		
@@ -162,7 +165,7 @@ public class Gui extends JFrame {
 				searching = false;
 			}
 		});
-		btnStart.setBounds(17, 267, 117, 29);
+		btnStart.setBounds(26, 290, 117, 29);
 		contentPane.add(btnStart);
 		
 		btnReset = new JButton("Reset");
@@ -180,10 +183,23 @@ public class Gui extends JFrame {
 				
 				// display 'Stopped' on btnStart for 5 seconds
 				btnStart.setText("Start");
+				
+				// update lblBtnResult
+				lblBtnResult.setText("Reset!");
 			}
 		});
-		btnReset.setBounds(17, 309, 117, 29);
+		btnReset.setBounds(26, 320, 117, 29);
 		contentPane.add(btnReset);
+		
+		JLabel lblChooseASummoner = new JLabel("Choose a spell");
+		lblChooseASummoner.setHorizontalAlignment(SwingConstants.CENTER);
+		lblChooseASummoner.setBounds(6, 217, 157, 25);
+		contentPane.add(lblChooseASummoner);
+		
+		lblBtnResult = new JLabel("");
+		lblBtnResult.setHorizontalAlignment(SwingConstants.CENTER);
+		lblBtnResult.setBounds(6, 361, 157, 16);
+		contentPane.add(lblBtnResult);
 		
 		
 	} //Gui()
@@ -208,6 +224,14 @@ public class Gui extends JFrame {
 				
 				Thread.sleep(100);
 				i++;
+				
+				if( stopFlag ) { return null; }
+			}
+			
+			// return if search timed out
+			if( i >= 600 ) {
+				lblBtnResult.setText("Search Timeout!");
+				return null;
 			}
 			
 			int x = location[0];
@@ -239,7 +263,7 @@ public class Gui extends JFrame {
 			bot.mouseRelease(mask);
 			
 			// enter hero name
-			Thread.sleep(50); // need to wait a bit
+			Thread.sleep(100); // need to wait a bit
 			String hero = (String) comboHero.getSelectedItem();
 			GuiSupport.writeMsg(bot, hero, false);
 			
@@ -251,6 +275,9 @@ public class Gui extends JFrame {
 			bot.mousePress(mask);
 			bot.mouseRelease(mask);
 			
+			// write to gui that you found and clicked on stuff
+			lblBtnResult.setText("Search Success!");
+			
 			return null;
 		} // doInBackground()
 		
@@ -259,6 +286,10 @@ public class Gui extends JFrame {
 			int[] location = chunks.get(chunks.size() - 1);
 			int x = location[0];
 			int y = location[1] + offset;
+			
+			if( stopFlag ) {
+				lblBtnResult.setText("Search Stopped!");
+			}
 			
 			int mostRecent = y;
 			
