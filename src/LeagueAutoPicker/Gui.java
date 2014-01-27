@@ -82,7 +82,9 @@ public class Gui extends JFrame {
 		
 		// below checks for non-default file paths
 		path = LeagueVars.getImageAssets();
+		//
 		// export the below code to GuiSupport eventually
+		//
 		String hero = "Ashe" + LeagueVars.heroPostfix; // used ashe because she's an old hero and starts with A
 		if( new File(path + hero).exists() ) {
 			// Success heroes are present go on your way
@@ -270,7 +272,6 @@ public class Gui extends JFrame {
 			
 			// enter hero name
 			String hero = selectedHero;
-			System.out.println(hero);
 			GuiSupport.writeMsg(bot, hero, false);
 			
 			Thread.sleep(400);
