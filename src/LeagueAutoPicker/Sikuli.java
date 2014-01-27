@@ -33,7 +33,8 @@ public class Sikuli {
 		
 		Target target = new ImageTarget(image);
 		target.setMinScore(0.8); // 1 is perfect image match, 0 is blurry match
-		ScreenRegion s = new DesktopScreenRegion();
+		ScreenRegion s = new DesktopScreenRegion(600,460,770,340);
+				//new DesktopScreenRegion();
 		ScreenRegion r = s.find(target);
 		
 		if( r != null ) {
